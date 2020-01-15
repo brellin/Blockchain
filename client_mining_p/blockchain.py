@@ -36,7 +36,7 @@ class Blockchain(object):
         block = {
             'index': len(self.chain),
             'timestamp': time(),
-            'transacions': self.current_transactions,
+            'transactions': self.current_transactions,
             'proof': proof,
             'previous_hash': previous_hash
         }
@@ -123,19 +123,20 @@ def mine():
     # Check that 'proof', and 'id' are present
     if data['proof'] and data['id']:
 
-        block_str = json.dumps(data)
+        block_str = json.dumps(blockchain.last_block['previous_hash'])
         success = blockchain.valid_proof(block_str, data['proof'])
 
-        response['message'] = 'You did not get it.'
+        # Forge the new Block by adding it to the chain with the proof
+        hash_str = blockchain.hash(block_str)
+        blockchain.new_block(data['proof'], hash_str)
 
         if success is True:
-            # Forge the new Block by adding it to the chain with the proof
-            hash_str = blockchain.hash(block_str)
-            block = blockchain.new_block(data['proof'], hash_str)
 
             # Return a message indicating success or failure.
             response['message'] = 'New Block Forged!'
             return jsonify(response), 200
+
+        response['message'] = 'You did not get it.'
 
     # return a 400 error using jsonify(response) with a 'message'
     return jsonify(response), 400

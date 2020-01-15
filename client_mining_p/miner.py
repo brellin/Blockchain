@@ -13,8 +13,8 @@ def proof_of_work(block):
     in an effort to find a number that is a valid proof
     :return: A valid proof for the provided block
     """
-    block_str = json.dumps(block)
-    proof = 0
+    block_str = json.dumps(block['previous_hash'])
+    proof = block['proof']
     print(f'start - block_str: {block_str}, proof: {proof}')
     while valid_proof(block_str, proof) is False:
         proof += 1
@@ -53,8 +53,8 @@ if __name__ == '__main__':
     f.close()
 
     # Run forever until interrupted
+    coins = 0
     while True:
-        print('Mining transaction start')
         r = requests.get(url=node + "/last_block")
         # Handle non-json response
         try:
@@ -64,9 +64,8 @@ if __name__ == '__main__':
             print("Response returned:")
             print(r)
             break
-
         # Get the block from `data` and use it to look for a new proof
-        new_proof = data['proof']
+        new_proof = proof_of_work(data)
 
         # When found, POST it to the server {"proof": new_proof, "id": id}
         post_data = {"proof": new_proof, "id": id}
@@ -77,7 +76,6 @@ if __name__ == '__main__':
         # If the server responds with a 'message' 'New Block Forged'
         # add 1 to the number of coins mined and print it.  Otherwise,
         # print the message from the server.
-        coins = 0
         if data['message'] == 'New Block Forged!':
             coins += 1
             print(f'WOOOOOO!!! You now have {coins} coin(s)!')
