@@ -13,7 +13,13 @@ def proof_of_work(block):
     in an effort to find a number that is a valid proof
     :return: A valid proof for the provided block
     """
-    pass
+    block_str = json.dumps(block)
+    proof = 0
+    print(f'start - block_str: {block_str}, proof: {proof}')
+    while valid_proof(block_str, proof) is False:
+        proof += 1
+    print(f'end - block_str: {block_str}, proof: {proof}')
+    return proof
 
 
 def valid_proof(block_string, proof):
@@ -27,7 +33,10 @@ def valid_proof(block_string, proof):
     correct number of leading zeroes.
     :return: True if the resulting hash is a valid proof, False otherwise
     """
-    pass
+    combo = f'{block_string}{proof}'.encode()
+    hashed = hashlib.sha256(combo).hexdigest()
+
+    return hashed[:6] == '000000'
 
 
 if __name__ == '__main__':
@@ -45,6 +54,7 @@ if __name__ == '__main__':
 
     # Run forever until interrupted
     while True:
+        print('Mining transaction start')
         r = requests.get(url=node + "/last_block")
         # Handle non-json response
         try:
@@ -55,8 +65,8 @@ if __name__ == '__main__':
             print(r)
             break
 
-        # TODO: Get the block from `data` and use it to look for a new proof
-        # new_proof = ???
+        # Get the block from `data` and use it to look for a new proof
+        new_proof = data['proof']
 
         # When found, POST it to the server {"proof": new_proof, "id": id}
         post_data = {"proof": new_proof, "id": id}
@@ -64,7 +74,12 @@ if __name__ == '__main__':
         r = requests.post(url=node + "/mine", json=post_data)
         data = r.json()
 
-        # TODO: If the server responds with a 'message' 'New Block Forged'
+        # If the server responds with a 'message' 'New Block Forged'
         # add 1 to the number of coins mined and print it.  Otherwise,
         # print the message from the server.
-        pass
+        coins = 0
+        if data['message'] == 'New Block Forged!':
+            coins += 1
+            print(f'WOOOOOO!!! You now have {coins} coin(s)!')
+        else:
+            print(data['message'])

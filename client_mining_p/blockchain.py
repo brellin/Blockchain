@@ -134,7 +134,8 @@ def mine():
             block = blockchain.new_block(data['proof'], hash_str)
 
             # Return a message indicating success or failure.
-            return jsonify(block), 200
+            response['message'] = 'New Block Forged!'
+            return jsonify(response), 200
 
     # return a 400 error using jsonify(response) with a 'message'
     return jsonify(response), 400
