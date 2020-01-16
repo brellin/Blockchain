@@ -11,6 +11,7 @@ black = "*"
 [packages]
 requests = ">=2.20.0"
 flask = ">=1.0.0"
+flask-cors = "*"
 
 [requires]
 python_version = "3.7"

@@ -16,11 +16,11 @@ def proof_of_work(block):
     :return: A valid proof for the provided block
     """
     block_str = json.dumps(block, sort_keys=True)
-    proof = block['proof']
-    print(f'start proofing')
+    proof = block["proof"]
+    print(f"start proofing")
     while valid_proof(block_str, proof) is False:
         proof += 1
-    print(f'end proofing')
+    print(f"end proofing")
     return proof
 
 
@@ -35,13 +35,13 @@ def valid_proof(block_string, proof):
     correct number of leading zeroes.
     :return: True if the resulting hash is a valid proof, False otherwise
     """
-    combo = f'{block_string}{proof}'.encode()
+    combo = f"{block_string}{proof}".encode()
     hashed = hashlib.sha256(combo).hexdigest()
 
-    return hashed[:6] == '000000'
+    return hashed[:6] == "000000"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # What is the server address? IE `python3 miner.py https://server.com/api/`
     if len(sys.argv) > 1:
         node = sys.argv[1]
@@ -70,7 +70,7 @@ if __name__ == '__main__':
         time = process_time()
         new_proof = proof_of_work(data)
         seconds = int(process_time() - time)
-        print(f'It took {seconds} seconds to get new proof.')
+        print(f"It took {seconds} seconds to get new proof.")
 
         # When found, POST it to the server {"proof": new_proof, "id": id}
         post_data = {"proof": new_proof, "id": id}
@@ -81,9 +81,12 @@ if __name__ == '__main__':
         # If the server responds with a 'message' 'New Block Forged'
         # add 1 to the number of coins mined and print it.  Otherwise,
         # print the message from the server.
-        message = data['message']
-        if message == 'New Block Forged!':
+        message = data["message"]
+        if message == "New Block Forged!":
             coins += 1
-            print(f'WOOOOOO!!! You now have {coins} coin(s)!')
+            position = data["position"]
+            print(
+                f"WOOOOOO!!! You now have {coins} coin(s)! The next index is {position}"
+            )
         else:
-            print(f'{message}')
+            print(f"{message}")

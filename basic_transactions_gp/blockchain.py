@@ -7,6 +7,7 @@ from time import time
 from uuid import uuid4
 
 from flask import Flask, jsonify, request
+from flask_cors import CORS, cross_origin
 
 
 class Blockchain(object):
@@ -110,6 +111,7 @@ class Blockchain(object):
 
 # Instantiate our Node
 app = Flask(__name__)
+CORS(app)
 
 # Generate a globally unique address for this node
 node_identifier = str(uuid4()).replace("-", "")
@@ -133,13 +135,14 @@ def mine():
 
         if success is True:
             transaction = {"sender": "0", "recipient": data["id"], "amount": 1}
-            blockchain.new_transaction(transaction)
+            position = blockchain.new_transaction(transaction)
             # Forge the new Block by adding it to the chain with the proof
             hash_str = blockchain.hash(block_str)
             blockchain.new_block(data["proof"], hash_str)
 
             # Return a message indicating success or failure.
             response["message"] = "New Block Forged!"
+            response["position"] = position
             return jsonify(response), 200
 
         response["message"] = "You did not get it."
@@ -158,6 +161,20 @@ def full_chain():
 @app.route("/last_block", methods=["GET"])
 def last_block():
     return jsonify(blockchain.last_block), 200
+
+
+@app.route("/transactions", methods={"GET"})
+def transactions():
+    return (
+        jsonify(
+            [
+                block["transactions"][0]
+                for block in blockchain.chain
+                if len(block["transactions"]) > 0
+            ]
+        ),
+        200,
+    )
 
 
 @app.route("/transactions/new", methods=["POST"])
