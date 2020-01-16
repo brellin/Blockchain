@@ -126,11 +126,10 @@ def mine():
         block_str = json.dumps(blockchain.last_block, sort_keys=True)
         success = blockchain.valid_proof(block_str, data['proof'])
 
-        # Forge the new Block by adding it to the chain with the proof
-        hash_str = blockchain.hash(block_str)
-        blockchain.new_block(data['proof'], hash_str)
-
         if success is True:
+            # Forge the new Block by adding it to the chain with the proof
+            hash_str = blockchain.hash(block_str)
+            blockchain.new_block(data['proof'], hash_str)
 
             # Return a message indicating success or failure.
             response['message'] = 'New Block Forged!'
