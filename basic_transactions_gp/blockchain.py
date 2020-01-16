@@ -34,11 +34,11 @@ class Blockchain(object):
         """
 
         block = {
-            'index': len(self.chain),
-            'timestamp': time(),
-            'transacions': self.current_transactions,
-            'proof': proof,
-            'previous_hash': previous_hash
+            "index": len(self.chain),
+            "timestamp": time(),
+            "transactions": self.current_transactions,
+            "proof": proof,
+            "previous_hash": previous_hash,
         }
 
         # Reset the current list of transactions
@@ -81,23 +81,14 @@ class Blockchain(object):
         # Return the hashed block string in hexadecimal format
         return hex_hash
 
+    def new_transaction(self, transaction):
+        if transaction["sender"] and transaction["recipient"] and transaction["amount"]:
+            self.current_transactions.append(transaction)
+        return len(self.chain)
+
     @property
     def last_block(self):
         return self.chain[-1]
-
-    def proof_of_work(self, block):
-        """
-        Simple Proof of Work Algorithm
-        Stringify the block and look for a proof.
-        Loop through possibilities, checking each one against `valid_proof`
-        in an effort to find a number that is a valid proof
-        :return: A valid proof for the provided block
-        """
-        block_str = json.dumps(block)
-        proof = 0
-        while self.valid_proof(block_str, proof) is False:
-            proof += 1
-        return proof
 
     @staticmethod
     def valid_proof(block_string, proof):
@@ -111,47 +102,80 @@ class Blockchain(object):
         correct number of leading zeroes.
         :return: True if the resulting hash is a valid proof, False otherwise
         """
-        combo = f'{block_string}{proof}'.encode()
+        combo = f"{block_string}{proof}".encode()
         hashed = hashlib.sha256(combo).hexdigest()
 
-        return hashed[:3] == '000'
+        return hashed[:6] == "000000"
 
 
 # Instantiate our Node
 app = Flask(__name__)
 
 # Generate a globally unique address for this node
-node_identifier = str(uuid4()).replace('-', '')
+node_identifier = str(uuid4()).replace("-", "")
 
 # Instantiate the Blockchain
 blockchain = Blockchain()
 
 
-@app.route('/mine', methods=['GET'])
+@app.route("/mine", methods=["POST"])
 def mine():
-    # Run the proof of work algorithm to get the next proof
-    proof = blockchain.proof_of_work(blockchain.last_block)
 
-    # Forge the new Block by adding it to the chain with the proof
-    prev_hash = blockchain.hash(blockchain.last_block)
-    block = blockchain.new_block(proof, prev_hash)
+    data = request.get_json()
 
-    response = {
-        'new_block': block
-    }
+    response = {"message": 'You must include "proof" and "id" fields'}
 
-    return jsonify(response), 200
+    # Check that 'proof', and 'id' are present
+    if data["proof"] and data["id"]:
+
+        block_str = json.dumps(blockchain.last_block, sort_keys=True)
+        success = blockchain.valid_proof(block_str, data["proof"])
+
+        if success is True:
+            transaction = {"sender": "0", "recipient": data["id"], "amount": 1}
+            blockchain.new_transaction(transaction)
+            # Forge the new Block by adding it to the chain with the proof
+            hash_str = blockchain.hash(block_str)
+            blockchain.new_block(data["proof"], hash_str)
+
+            # Return a message indicating success or failure.
+            response["message"] = "New Block Forged!"
+            return jsonify(response), 200
+
+        response["message"] = "You did not get it."
+
+    # return a 400 error using jsonify(response) with a 'message'
+    return jsonify(response), 400
 
 
-@app.route('/chain', methods=['GET'])
+@app.route("/chain", methods=["GET"])
 def full_chain():
-    response = {
-        'length': len(blockchain.chain),
-        'chain': blockchain.chain
-    }
+    response = {"length": len(blockchain.chain), "chain": blockchain.chain}
     return jsonify(response), 200
+
+
+# Add an endpoint called last_block that returns the last block in the chain
+@app.route("/last_block", methods=["GET"])
+def last_block():
+    return jsonify(blockchain.last_block), 200
+
+
+@app.route("/transactions/new", methods=["POST"])
+def new_transaction():
+
+    data = request.get_json()
+
+    response = {
+        "message": 'The "sender", "recipient", and "amount" fields are required. Please try again.'
+    }
+
+    if data["sender"] and data["recipient"] and data["amount"]:
+        response["message"] = blockchain.new_transaction(data)
+        return jsonify(response), 200
+
+    return jsonify(response), 400
 
 
 # Run the program on port 5000
-if __name__ == '__main__':
-    app.run(host='localhost', port=5000, debug=True)
+if __name__ == "__main__":
+    app.run(host="localhost", port=5000, debug=True)
