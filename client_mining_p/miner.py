@@ -13,7 +13,7 @@ def proof_of_work(block):
     in an effort to find a number that is a valid proof
     :return: A valid proof for the provided block
     """
-    block_str = json.dumps(block['previous_hash'])
+    block_str = json.dumps(block, sort_keys=True)
     proof = block['proof']
     print(f'start - block_str: {block_str}, proof: {proof}')
     while valid_proof(block_str, proof) is False:

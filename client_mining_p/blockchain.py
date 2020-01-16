@@ -123,7 +123,7 @@ def mine():
     # Check that 'proof', and 'id' are present
     if data['proof'] and data['id']:
 
-        block_str = json.dumps(blockchain.last_block['previous_hash'])
+        block_str = json.dumps(blockchain.last_block, sort_keys=True)
         success = blockchain.valid_proof(block_str, data['proof'])
 
         # Forge the new Block by adding it to the chain with the proof
