@@ -4,6 +4,8 @@ import requests
 import sys
 import json
 
+from time import process_time
+
 
 def proof_of_work(block):
     """
@@ -65,7 +67,10 @@ if __name__ == '__main__':
             print(r)
             break
         # Get the block from `data` and use it to look for a new proof
+        time = process_time()
         new_proof = proof_of_work(data)
+        seconds = int(process_time() - time)
+        print(f'It took {seconds} seconds to get new proof.')
 
         # When found, POST it to the server {"proof": new_proof, "id": id}
         post_data = {"proof": new_proof, "id": id}
