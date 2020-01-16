@@ -17,10 +17,10 @@ def proof_of_work(block):
     """
     block_str = json.dumps(block, sort_keys=True)
     proof = block['proof']
-    print(f'start - block_str: {block_str}, proof: {proof}')
+    print(f'start proofing')
     while valid_proof(block_str, proof) is False:
         proof += 1
-    print(f'end - block_str: {block_str}, proof: {proof}')
+    print(f'end proofing')
     return proof
 
 
